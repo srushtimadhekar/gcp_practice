@@ -1,0 +1,99 @@
+/* General Reset */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #343a40;
+}
+
+/* Navigation Bar */
+.navbar {
+    background-color: #b30000;
+}
+.navbar-brand, .nav-link, .navbar-text {
+    color: #fff !important;
+}
+.nav-link:hover {
+    color: #ffd6d6 !important;
+}
+
+/* Cards on Home Page */
+.card {
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(179, 0, 0, 0.2);
+}
+.card-title {
+    color: #b30000;
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #b30000;
+    border: none;
+}
+.btn-primary:hover {
+    background-color: #800000;
+}
+
+/* Section Headings */
+h2, h3 {
+    color: #b30000;
+    font-weight: 600;
+}
+
+/* Dashboard Panels */
+.dashboard-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff;
+    border-left: 6px solid #b30000;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Campaign Cards */
+.campaign-card {
+    background-color: #ffe6e6;
+    border-left: 5px solid #b30000;
+}
+
+/* Appreciation Message */
+.thank-you {
+    background-color: #eafaf1;
+    border-left: 6px solid #28a745;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    color: #155724;
+}
+
+/* Urgency Color Codes (Receiver Dashboard) */
+.urgency-red {
+    background-color: #ffcccc;
+    border-left: 5px solid #ff0000;
+}
+.urgency-orange {
+    background-color: #ffe5cc;
+    border-left: 5px solid #ff8000;
+}
+.urgency-yellow {
+    background-color: #ffffcc;
+    border-left: 5px solid #cccc00;
+}
+.urgency-green {
+    background-color: #e6ffcc;
+    border-left: 5px solid #66cc00;
+}
+
+/* Footer */
+footer {
+    background-color: #b30000;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    margin-top: 40px;
+}

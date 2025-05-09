@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Home - Blood Bank{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h2 class="mb-4">Welcome to the Blood Bank Management System</h2>
+    <p class="lead">Manage donors, recipients, and blood inventory efficiently and securely.</p>
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-hand-holding-medical fa-2x text-danger"></i>
+                    </div>
+                    <h5 class="card-title">Donate Blood</h5>
+                    <p class="card-text">Become a life saver by donating blood. A single drop can save a life.</p>
+                    <a href="/register" class="btn btn-outline-danger mt-2">Become a Donor</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-search-location fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Find Donors</h5>
+                    <p class="card-text">Search our database to find matching blood groups near you.</p>
+                    <a href="/search_donors" class="btn btn-outline-primary mt-2">Search Now</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-tint fa-2x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Track Inventory</h5>
+                    <p class="card-text">Hospitals can manage and monitor blood stock in real-time.</p>
+                    <a href="/inventory" class="btn btn-outline-success mt-2">View Inventory</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

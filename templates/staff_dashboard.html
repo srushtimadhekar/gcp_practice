@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard</title>
+</head>
+<body>
+    <h1>Staff Dashboard</h1>
+
+    <!-- Blood Inventory Section -->
+    <h2>Blood Inventory</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Blood Group</th>
+                <th>Available Quantity</th>
+                <th>Expiry Date</th>
+                <th>Product Type</th>
+                <th>Storage Conditions</th>
+                <th>Shelf Life (Days)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inventory in blood_inventory %}
+                <tr>
+                    <td>{{ inventory.blood_group }}</td>
+                    <td>{{ inventory.available_units }}</td>
+                    <td>{{ inventory.expiry_date }}</td>
+                    <td>{{ inventory.product_type }}</td>
+                    <td>{{ inventory.storage_conditions }}</td>
+                    <td>{{ inventory.shelf_life }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pending Blood Requests Section -->
+    <h2>Pending Blood Requests</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Blood Group</th>
+                <th>Quantity</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in pending_requests %}
+                <tr>
+                    <td>{{ request.id }}</td>
+                    <td>{{ request.blood_group }}</td>
+                    <td>{{ request.quantity }}</td>
+                    <td>{{ request.priority }}</td>
+                    <td>{{ request.status }}</td>
+                    <td>
+                        {% if request.status == 'Pending' %}
+                            <a href="{{ url_for('approve_request', request_id=request.id) }}">Approve</a> |
+                            <a href="{{ url_for('reject_request', request_id=request.id) }}">Reject</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Campaigns Section -->
+    <h2>Campaign Notices</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Campaign Title</th>
+                <th>Description</th>
+                <th>Contact Person</th>
+                <th>Contact Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for campaign in campaigns %}
+                <tr>
+                    <td>{{ campaign.title }}</td>
+                    <td>{{ campaign.description }}</td>
+                    <td>{{ campaign.contact_person }}</td>
+                    <td>{{ campaign.contact_phone }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- All Blood Requests Section -->
+    <h2>All Blood Requests</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Blood Group</th>
+                <th>Quantity</th>
+                <th>Receiver</th>
+                <th>Priority</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in all_requests %}
+                <tr>
+                    <td>{{ request.id }}</td>
+                    <td>{{ request.blood_group }}</td>
+                    <td>{{ request.quantity }}</td>
+                    <td>{{ request.receiver_name }}</td>  <!-- Assuming you have receiver name field -->
+                    <td>{{ request.priority }}</td>
+                    <td>{{ request.status }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

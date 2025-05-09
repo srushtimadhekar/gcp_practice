@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Blood Request</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Update Blood Request</h2>
+
+        <form action="{{ url_for('update_request', request_id=request.id) }}" method="POST">
+            <!-- Blood Type -->
+            <div class="form-group">
+                <label for="blood_type">Blood Type</label>
+                <select name="blood_type" id="blood_type" class="form-control" required>
+                    <option value="A+" {% if request.blood_type == 'A+' %}selected{% endif %}>A+</option>
+                    <option value="B+" {% if request.blood_type == 'B+' %}selected{% endif %}>B+</option>
+                    <option value="O+" {% if request.blood_type == 'O+' %}selected{% endif %}>O+</option>
+                    <option value="AB+" {% if request.blood_type == 'AB+' %}selected{% endif %}>AB+</option>
+                    <option value="A-" {% if request.blood_type == 'A-' %}selected{% endif %}>A-</option>
+                    <option value="B-" {% if request.blood_type == 'B-' %}selected{% endif %}>B-</option>
+                    <option value="O-" {% if request.blood_type == 'O-' %}selected{% endif %}>O-</option>
+                    <option value="AB-" {% if request.blood_type == 'AB-' %}selected{% endif %}>AB-</option>
+                </select>
+            </div>
+
+            <!-- Blood Quantity -->
+            <div class="form-group">
+                <label for="quantity">Quantity (in units)</label>
+                <input type="number" name="quantity" id="quantity" class="form-control" value="{{ request.quantity }}" required min="1">
+            </div>
+
+            <!-- Urgency -->
+            <div class="form-group">
+                <label for="urgency">Urgency</label>
+                <select name="urgency" id="urgency" class="form-control" required>
+                    <option value="High" {% if request.urgency == 'High' %}selected{% endif %}>High</option>
+                    <option value="Medium" {% if request.urgency == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if request.urgency == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea name="address" id="address" class="form-control" required>{{ request.address }}</textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Update Request</button>
+            </div>
+        </form>
+
+        <div class="mt-4">
+            <a href="{{ url_for('view_requests') }}" class="btn btn-secondary">Back to Requests</a>
+        </div>
+    </div>
+</body>
+</html>

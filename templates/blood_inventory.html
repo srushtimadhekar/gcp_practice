@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Inventory</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Blood Inventory</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('staff_dashboard') }}">Back to Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Available Blood Units</h2>
+            {% if blood_inventory %}
+            <table>
+    <thead>
+        <tr>
+            <th>Blood Group</th>
+            <th>Available Units</th>
+            <th>Last Updated</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in blood_inventory %}
+        <tr>
+            <td>{{ item.blood_group }}</td>
+            <td>{{ item.available_units }}</td>
+            <td>{{ item.last_updated }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+            {% else %}
+            <p>No blood inventory data available at the moment.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Blood Bank Management</p>
+    </footer>
+</body>
+</html>

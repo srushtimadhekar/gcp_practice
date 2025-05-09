@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Blood Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>View Blood Requests</h2>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Blood Group</th>
+                    <th>Quantity</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Required By</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                    <tr>
+                        <td>{{ request.blood_group }}</td>
+                        <td>{{ request.quantity }} units</td>
+                        <td>{{ request.priority }}</td>
+                        <td>{{ request.status }}</td>
+                        <td>{{ request.required_by }}</td>
+                        <td>{{ request.address }}</td>
+                        <td>
+                            <a href="{{ url_for('update_request', request_id=request.id) }}" class="btn btn-warning">Edit</a>
+                            <a href="{{ url_for('cancel_request', request_id=request.id) }}" class="btn btn-danger">Cancel</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">No requests available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{{ url_for('home') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</body>
+</html>
