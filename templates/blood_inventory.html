@@ -1,52 +1,167 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Inventory</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Blood Inventory</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('staff_dashboard') }}">Back to Dashboard</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends 'base.html' %}
 
-    <main>
-        <section>
-            <h2>Available Blood Units</h2>
-            {% if blood_inventory %}
-            <table>
-    <thead>
-        <tr>
-            <th>Blood Group</th>
-            <th>Available Units</th>
-            <th>Last Updated</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in blood_inventory %}
-        <tr>
-            <td>{{ item.blood_group }}</td>
-            <td>{{ item.available_units }}</td>
-            <td>{{ item.last_updated }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Blood Inventory</h2>
 
-            {% else %}
-            <p>No blood inventory data available at the moment.</p>
-            {% endif %}
-        </section>
-    </main>
+    <!-- Search Form -->
+    <form method="POST" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="blood_group" class="form-label">Search by Blood Group</label>
+                <select name="blood_group" id="blood_group" class="form-select">
+                    <option value="">Select Blood Group</option>
+                    {% for blood in blood_groups %}
+                        <option value="{{ blood.blood_group }}">{{ blood.blood_group }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="amount" class="form-label">Minimum Amount </label>
+                <input type="number" name="amount" id="amount" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-danger mt-4 w-100">Search</button>
+            </div>
+        </div>
+    </form>
 
-    <footer>
-        <p>&copy; 2025 Blood Bank Management</p>
-    </footer>
-</body>
-</html>
+    <!-- Inventory Table -->
+    {% if inventory %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Blood Group</th>
+                    <th>Amount </th>
+                    <th>Collection Date</th>
+                    <th>Expiry Date</th>
+                    <th>Product Type</th>
+                    <th>Storage Condition</th>
+                    <th>Shelf Life (days)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory %}
+                    <tr class="{% if item.expiry_date < current_date %}table-danger{% endif %}">
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.blood_group }}</td>
+                        <td>{{ item.available_units }}</td>
+                        <td>{{ item.last_updated }}</td>
+                        <td>{{ item.expiry_date }}</td>
+                        <td>{{ item.product_type }}</td>
+                        <td>{{ item.storage_conditions }}</td>
+                        <td>{{ item.shelf_life }}</td>
+                        <td>
+                            <!-- Edit Button -->
+                            <a href="{{ url_for('edit_inventory', id=item.id) }}" class="btn btn-warning btn-sm">Edit</a>
+    
+                            <!-- Delete Form -->
+                            <form action="{{ url_for('delete_inventory', id=item.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?')">Delete</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-center text-muted mt-4">No blood inventory records found.</p>
+    {% endif %}
+
+    <!-- Add to Inventory Form -->
+    <hr class="my-5">
+    <h4 class="text-center mb-3">Add New Blood Inventory</h4>
+    <form method="POST" action="{{ url_for('add_inventory') }}">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Blood Group</label>
+                <select name="blood_group" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    {% for bt in blood_groups %}
+                        <option value="{{ bt.blood_group }}">{{ bt.blood_group }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Amount </label>
+                <input type="number" name="amount" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Collection Date</label>
+                <input type="date" name="collection_date" id="collection_date" class="form-control" required onchange="updateExpiryDate()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Product Type</label>
+                <select name="product_type" id="product_type" class="form-select" required onchange="setStorageInfo(this.value)">
+                    <option value="">-- Select --</option>
+                    <option value="PRBC">PRBC (Red Blood Cells)</option>
+                    <option value="Platelets">Platelets</option>
+                    <option value="FFP">Fresh Frozen Plasma</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Storage Condition</label>
+                <input type="text" name="storage_condition" id="storage_condition" class="form-control" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Shelf Life (days)</label>
+                <input type="number" name="shelf_life" id="shelf_life" class="form-control" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Expiry Date</label>
+                <input type="date" name="expiry_date" id="expiry_date" class="form-control" readonly>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-success">Add to Inventory</button>
+        </div>
+    </form>
+</div>
+
+<!-- Storage and Expiry Script -->
+<script>
+function setStorageInfo(productType) {
+    const storageMap = {
+        "PRBC": { condition: "Store at 2-6°C", shelf: 42 },
+        "Platelets": { condition: "Store at room temperature", shelf: 5 },
+        "FFP": { condition: "Store at -18°C or colder", shelf: 365 }
+    };
+
+    if (productType in storageMap) {
+        document.getElementById('storage_condition').value = storageMap[productType].condition;
+        document.getElementById('shelf_life').value = storageMap[productType].shelf;
+    } else {
+        document.getElementById('storage_condition').value = '';
+        document.getElementById('shelf_life').value = '';
+    }
+
+    updateExpiryDate();  // Call after setting shelf life
+}
+
+function updateExpiryDate() {
+    const collectionDate = document.getElementById('collection_date').value;
+    const shelfLife = parseInt(document.getElementById('shelf_life').value);
+
+    if (collectionDate && shelfLife) {
+        const date = new Date(collectionDate);
+        date.setDate(date.getDate() + shelfLife);
+
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        document.getElementById('expiry_date').value = `${yyyy}-${mm}-${dd}`;
+    } else {
+        document.getElementById('expiry_date').value = '';
+    }
+}
+</script>
+{% endblock %}

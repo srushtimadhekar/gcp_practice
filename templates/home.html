@@ -1,50 +1,471 @@
 {% extends 'base.html' %}
-{% block title %}Home - Blood Bank{% endblock %}
 
 {% block content %}
-<div class="container py-5 text-center">
-    <h2 class="mb-4">Welcome to the Blood Bank Management System</h2>
-    <p class="lead">Manage donors, recipients, and blood inventory efficiently and securely.</p>
+    <!-- Hero Section -->
+    <header class="bg-light text-center py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold" data-aos="fade-down">Blood Bank Management System</h1>
+            <p class="lead" data-aos="fade-up" data-aos-delay="200">Save Lives with Efficient Blood Management</p>
+            <a href="{{ url_for('login') }}" class="btn btn-danger btn-lg mt-3" data-aos="zoom-in" data-aos-delay="300">Explore Dashboard</a>
 
-    <div class="row mt-5">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-hand-holding-medical fa-2x text-danger"></i>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" data-aos="fade-up">Key Modules</h2>
+                <p class="text-muted">Efficiently manage donors, inventory, and recipients.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-right">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🧑‍💉 Donor Module</h5>
+                            <p class="card-text">Register, manage and track blood donors with ease.</p>
+                        </div>
                     </div>
-                    <h5 class="card-title">Donate Blood</h5>
-                    <p class="card-text">Become a life saver by donating blood. A single drop can save a life.</p>
-                    <a href="/register" class="btn btn-outline-danger mt-2">Become a Donor</a>
+                </div>
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🏥 Hospital Requests</h5>
+                            <p class="card-text">Hospitals can request and receive updates on availability.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-left">
+                    <div class="card border-0 shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">📊 Admin Panel</h5>
+                            <p class="card-text">Manage inventory, donor data, and generate reports.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-search-location fa-2x text-primary"></i>
-                    </div>
-                    <h5 class="card-title">Find Donors</h5>
-                    <p class="card-text">Search our database to find matching blood groups near you.</p>
-                    <a href="/search_donors" class="btn btn-outline-primary mt-2">Search Now</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init();
+</script>
+
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Enhanced Hero Section with Sanskrit Title */
+        .hero-section {
+    background: url("assets/hero-bg.jpg") no-repeat center center/cover;
+    color: rgb(255, 255, 255);
+    padding: 80px 20px;
+    text-align: center;
+    border-bottom-left-radius: 50px;
+    border-bottom-right-radius: 50px;
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 Q50,80 0,100 Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.3;
+        }
+        
+
+        /* Sanskrit Title Styling */
+        .sanskrit-title {
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(to right, #ffffff, #ffcdd2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .sanskrit-title::after {
+            content: "";
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 4px;
+            background: linear-gradient(to right, #ffffff, #ff5252);
+            border-radius: 2px;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin: 20px 0 30px;
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-scroll {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            background-color: white;
+            color: #b71c1c;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-scroll:hover {
+            background-color: #ffcdd2;
+            color: #880e4f;
+            transform: translateY(-2px);
+        }
+
+        
+
+        /* Rest of your existing styles remain the same */
+        .dashboard-tile {
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 15px 10px;
+            text-align: center;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+            transition: 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dashboard-tile:hover {
+            transform: translateY(-5px);
+            opacity: 0.9;
+        }
+
+        .blood { background-color: #c62828; }
+        .directory { background-color: #1565c0; }
+        .camps { background-color: #f9a825; }
+        .login { background-color: #d32f2f; }
+        .register { background-color: #2e7d32; }
+
+        .section-heading {
+            color: #d32f2f;
+            font-size: 24px;
+            margin-top: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .donation-info {
+            background-color: #fce4ec;
+            padding: 25px;
+            border-radius: 20px;
+            margin: 30px 0;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .donation-info img {
+            max-width: 100%;
+        }
+
+        table {
+            background-color: white;
+        }
+
+        .btn-donate {
+            background-color: #d50000;
+            color: white;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .btn-donate:hover {
+            background-color: #b71c1c;
+        }
+
+       
+    </style>
+
+
+    <!-- Awareness Animation Section -->
+    <div class="container mt-2">
+        <div class="awareness-banner">
+            <h2 class="text-center mb-7" style="font-family: 'Noto Sans Devanagari', sans-serif;">रक्तदान: जीवन का उपहार</h2>
+            <div class="blood-drop mb-2"></div>
+
+            <div class="row">
+                <div class="col-md stat-item">
+                    <div class="stat-number">1</div>
+                    <p>Donation Can Save<br>Up to 3 Lives</p>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <i class="fas fa-tint fa-2x text-success"></i>
-                    </div>
-                    <h5 class="card-title">Track Inventory</h5>
-                    <p class="card-text">Hospitals can manage and monitor blood stock in real-time.</p>
-                    <a href="/inventory" class="btn btn-outline-success mt-2">View Inventory</a>
+                <div class="col-md stat-item">
+                    <div class="stat-number">48</div>
+                    <p>Hours Needed to<br>Replenish Blood</p>
+                </div>
+                <div class="col-md stat-item">
+                    <div class="stat-number">12M+</div>
+                    <p>Donations Needed<br>Yearly in India</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <style>
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.03); opacity: 1; } 
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+  
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); } 
+      100% { transform: translateY(0px); }
+    }
+  
+    .awareness-banner {
+      background: linear-gradient(135deg, #ff4db8, #cc0000);
+      color: white;
+      padding: 20px; 
+      border-radius: 15px;
+      margin: 20px auto; 
+      max-width: 600px; 
+      animation: pulse 3s infinite;
+      box-shadow: 0 8px 16px rgba(204, 0, 0, 0.3);
+    }
+  
+    .blood-drop {
+      width: 50px; 
+      height: 70px; 
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><path fill="%23cc0000" d="M50 0Q65 30 50 60Q35 30 50 0Z" transform="translate(0 20)"/><ellipse cx="50" cy="90" rx="30" ry="40" fill="%23cc0000"/></svg>') no-repeat;
+      margin: 0 auto;
+      animation: float 2s ease-in-out infinite;
+      background-size: contain; 
+    }
+  
+    .stat-item {
+      text-align: center;
+      padding: 10px; 
+    }
+    .stat-number {
+      font-size: 1.8rem; 
+      font-weight: bold;
+      color: #fff;
+    }
+  
+    .hover-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 2rem; 
+      font-weight: bold;
+      text-shadow: 2px 2px 10px #000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      text-align: center;
+      pointer-events: none;
+    }
+  
+    .video-bg-container:hover .hover-text {
+      opacity: 1;
+    }
+  
+    .dashboard-section {
+      background-color: #f5f5f5;
+      padding: 40px 15px; 
+    }
+  
+    .tile {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      padding: 20px; 
+      transition: all 0.3s;
+    }
+  
+    .tile:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+    }
+  
+    .tile i {
+      font-size: 1.8rem; 
+      color: #dc3545;
+      margin-bottom: 10px;
+    }
+  
+    .tile h4 {
+      font-weight: 600;
+      font-size: 1.1rem; 
+    }
+  </style>
+  
+  <!-- External stylesheets -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  
+  <!-- animation effects -->
+
+  <style>
+    .hover-text {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   color: #fff;
+   font-size: 3rem;
+   font-weight: bold;
+   text-shadow: 2px 2px 10px #000;
+   opacity: 0;
+   transition: opacity 0.5s ease-in-out;
+   text-align: center;
+   pointer-events: none;
+ }
+
+ .video-bg-container:hover .hover-text {
+   opacity: 1;
+ }
+
+ .dashboard-section {
+   background-color: #efefec;
+   padding: 60px 20px;
+ }
+
+ .tile {
+   background: white;
+   border-radius: 15px;
+   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+   text-align: center;
+   padding: 30px;
+   transition: all 0.3s;
+ }
+
+ .tile:hover {
+   transform: scale(1.05);
+   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+ }
+
+ .tile i {
+   font-size: 2.5rem;
+   color: #dc3545;
+   margin-bottom: 15px;
+ }
+
+ .tile h4 {
+   font-weight: 600;
+ }
+   
+ </style>
+   
+
+<!-- Dashboard Section -->
+<section class="dashboard-section">
+  <div class="container">
+    <h2 class="text-center mb-5 text-danger">Explore Portal</h2>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="tile">
+          <i class="fas fa-user-plus"></i>
+          <h4><a href="{{ url_for('register') }}">Register</a></h4> <!-- Link to register page -->
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="tile">
+          <i class="fas fa-sign-in-alt"></i>
+          <h4><a href="{{ url_for('login') }}">Login</a></h4> <!-- Link to login page -->
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="tile">
+          <i class="fas fa-heartbeat"></i>
+          <h4><a href="{{ url_for('why_donate') }}">Why Donate?</a></h4> <!-- Link to 'Why Donate' page -->
+        </div>
+      </div>
+      <!-- Adding Blood Donation Camps as the 4th option -->
+      <div class="col-md-3">
+        <div class="tile">
+          <i class="fas fa-calendar-alt"></i>
+          <h4><a href="{{ url_for('view_campaigns') }}">Blood Donation Camps</a></h4> <!-- Link to 'Blood Donation Camps' page -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <h2 class="section-heading">LEARN ABOUT DONATION</h2>
+
+    <div class="row donation-info align-items-center">
+    <div class="col-md-6">
+        <img src="{{ url_for('static', filename='img/i1_1.jpg') }}" alt="Blood Donation Graphic" class="img-fluid">
+    </div>
+    </div>
+
+        <div class="col-md-6">
+            <p><strong>One Blood Donation can save up to <span style="color:#d50000;">Three Lives</span></strong></p>
+            <p>After donating blood, the body works to replenish the blood loss. This stimulates the production of new blood cells and helps maintain good health.</p>
+            <a href="/donate" class="btn btn-donate">Donate Now</a>
+        </div>
+    </div>
+
+    
+
+
+    <div class="row mt-4">
+        <h4 class="text-center mb-3">Compatible Blood Type Donors</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered text-center">
+                <thead class="table-danger">
+                    <tr>
+                        <th>Blood Type</th>
+                        <th>Donate Blood To</th>
+                        <th>Receive Blood From</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A+</td><td>A+ AB+</td><td>A+ A- O+ O-</td></tr>
+                    <tr><td>O+</td><td>O+ A+ B+ AB+</td><td>O+ O-</td></tr>
+                    <tr><td>B+</td><td>B+ AB+</td><td>B+ B- O+ O-</td></tr>
+                    <tr><td>AB+</td><td>AB+</td><td>Everyone</td></tr>
+                    <tr><td>A-</td><td>A+ A- AB+ AB-</td><td>A- O-</td></tr>
+                    <tr><td>O-</td><td>Everyone</td><td>O-</td></tr>
+                    <tr><td>B-</td><td>B+ B- AB+ AB-</td><td>B- O-</td></tr>
+                    <tr><td>AB-</td><td>AB+ AB-</td><td>AB- A- B- O-</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2025 रक्तसंजीवनी (Raktasañjīvanī) | Developed with ❤️ by Shradha
+    </div>
+  </div>
+
 {% endblock %}

@@ -1,35 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{% block title %}Blood Bank{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Raktasañjīvanī | Blood Donation Portal</title>
 
-
+    <!-- Bootstrap, AOS, Google Fonts, Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">Blood Bank</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-        <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
-        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-        <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
-      </ul>
+
+    <!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">🩸 BloodBank+</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/about' %}active{% endif %}" href="/about">About</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/contact' %}active{% endif %}" href="/contact">Contact</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="/login">Login</a></li>
+                
+                {% if session.get('user_id') %} <!-- Check if the user is logged in -->
+                    <li class="nav-item"><a class="nav-link {% if request.path == '/logout' %}active{% endif %}" href="{{ url_for('logout') }}">Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-danger">
+                {% for category, message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Content Block -->
+    {% block content %}
+    <!-- Default content goes here if not overridden by child templates -->
+    {% endblock %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+
 </body>
 </html>

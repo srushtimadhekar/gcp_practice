@@ -1,121 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard</title>
-</head>
-<body>
-    <h1>Staff Dashboard</h1>
+{% extends "base.html" %}
 
-    <!-- Blood Inventory Section -->
-    <h2>Blood Inventory</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Blood Group</th>
-                <th>Available Quantity</th>
-                <th>Expiry Date</th>
-                <th>Product Type</th>
-                <th>Storage Conditions</th>
-                <th>Shelf Life (Days)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for inventory in blood_inventory %}
-                <tr>
-                    <td>{{ inventory.blood_group }}</td>
-                    <td>{{ inventory.available_units }}</td>
-                    <td>{{ inventory.expiry_date }}</td>
-                    <td>{{ inventory.product_type }}</td>
-                    <td>{{ inventory.storage_conditions }}</td>
-                    <td>{{ inventory.shelf_life }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% block content %}
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
 
-    <!-- Pending Blood Requests Section -->
-    <h2>Pending Blood Requests</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Request ID</th>
-                <th>Blood Group</th>
-                <th>Quantity</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for request in pending_requests %}
-                <tr>
-                    <td>{{ request.id }}</td>
-                    <td>{{ request.blood_group }}</td>
-                    <td>{{ request.quantity }}</td>
-                    <td>{{ request.priority }}</td>
-                    <td>{{ request.status }}</td>
-                    <td>
-                        {% if request.status == 'Pending' %}
-                            <a href="{{ url_for('approve_request', request_id=request.id) }}">Approve</a> |
-                            <a href="{{ url_for('reject_request', request_id=request.id) }}">Reject</a>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<style>
+  .swiper {
+    width: 90%;
+    max-width: 960px;
+    height: 400px; /* Increased height for more attractive visuals */
+    margin: 40px auto;
+  }
 
-    <!-- Campaigns Section -->
-    <h2>Campaign Notices</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Campaign Title</th>
-                <th>Description</th>
-                <th>Contact Person</th>
-                <th>Contact Phone</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for campaign in campaigns %}
-                <tr>
-                    <td>{{ campaign.title }}</td>
-                    <td>{{ campaign.description }}</td>
-                    <td>{{ campaign.contact_person }}</td>
-                    <td>{{ campaign.contact_phone }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  .swiper-slide {
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align content at the bottom */
+    padding: 30px 20px;
+    position: relative; /* Required for absolute positioning of text */
+    height: 100%; /* Ensure the increased height is applied */
+  }
 
-    <!-- All Blood Requests Section -->
-    <h2>All Blood Requests</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Request ID</th>
-                <th>Blood Group</th>
-                <th>Quantity</th>
-                <th>Receiver</th>
-                <th>Priority</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for request in all_requests %}
-                <tr>
-                    <td>{{ request.id }}</td>
-                    <td>{{ request.blood_group }}</td>
-                    <td>{{ request.quantity }}</td>
-                    <td>{{ request.receiver_name }}</td>  <!-- Assuming you have receiver name field -->
-                    <td>{{ request.priority }}</td>
-                    <td>{{ request.status }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  .swiper-slide h4 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
 
-</body>
-</html>
+  .swiper-slide p {
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .swiper-slide .text-content {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5); /* Background for text for better visibility */
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .quote {
+    text-align: center;
+    font-size: 1.5rem;
+    font-style: italic;
+    margin-top: 40px;
+    color: #e60000;
+  }
+</style>
+
+<!-- Swiper Content -->
+<div class="swiper mySwiper">
+  <div class="swiper-wrapper">
+
+    <!-- Slide 1: Blood Campaigns (Now First) -->
+    <div class="swiper-slide campaign-slide"
+        style="background-image: url('https://img.freepik.com/free-photo/people-donating-blood-clinic_23-2148892264.jpg');">
+      <div class="text-content">
+        <h4>📢 Blood Campaigns</h4>
+        <p>Organize, manage, and promote donation drives</p>
+      </div>
+    </div>
+
+    <!-- Slide 2: Blood Inventory (Now Second) -->
+    <div class="swiper-slide" onclick="location.href='/blood_inventory'"
+      style="background-image: url('https://img.freepik.com/free-photo/blood-donation-transport-bags-shelves-medical-clinic_1150-20810.jpg');"> 
+      <div class="text-content">
+        <h4>🩸 Blood Inventory</h4>
+        <p>Check current stock and blood type availability</p>
+      </div>
+    </div>
+
+    <!-- Slide 3: Pending Requests -->
+    <div class="swiper-slide" onclick="location.href='/pending_requests'"
+      style="background-image: url('https://img.freepik.com/free-photo/medical-technologist-working-with-blood-sample-lab_23-2150061397.jpg');"> 
+      <div class="text-content">
+        <h4>📥 Pending Requests</h4>
+        <p>View and process patient/receiver requests</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation Arrows -->
+  <div class="swiper-button-next"></div>
+  <div class="swiper-button-prev"></div>
+
+  <!-- Pagination Dots -->
+  <div class="swiper-pagination"></div>
+</div>
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+<script>
+  var swiper = new Swiper(".mySwiper", {
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+    loop: true,
+    grabCursor: true,
+    spaceBetween: 30,
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+      renderBullet: function (index, className) {
+        return '<span class="' + className + '"></span>';
+      }
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev'
+    }
+  });
+
+  // Adding click listener to the Blood Campaigns slide
+  document.addEventListener("DOMContentLoaded", function() {
+    var campaignSlide = document.querySelector('.campaign-slide');
+    if (campaignSlide) {
+      campaignSlide.addEventListener('click', function() {
+        window.location.href = "{{ url_for('view_campaigns') }}";  // Use Jinja to generate the URL
+      });
+    }
+  });
+</script>
+
+<!-- Quote Section -->
+<div class="quote">
+  "The blood you donate gives someone another chance at life. Be a hero – donate blood."
+</div>
+
+{% endblock %}

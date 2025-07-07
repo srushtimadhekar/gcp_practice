@@ -1,99 +1,44 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+
+{% block title %}Home - Blood Bank{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Welcome, {{ session['username'] }}!</h2>
-    <hr>
+<!-- Hero Section -->
+<section style="background: #fff3e0; padding: 4rem 2rem; text-align: center;">
+    <h1 style="font-family: 'Tillana', cursive; font-size: 3rem; color: #b71c1c;">
+        रक्तदानं जीवनदानम्
+    </h1>
+    <p style="font-size: 1.2rem; color: #333;">
+        "Raktadanam Jeevanadanam" – Donate blood, save lives.
+    </p>
+</section>
 
-    {% if role == 'Donor' %}
+<!-- Awareness Animation Section -->
+<section style="padding: 3rem 2rem; background-color: #fff8f0;">
+    <div data-aos="fade-up" style="text-align: center; max-width: 800px; margin: auto;">
+        <h2 style="color: #d32f2f;">Why Donate Blood?</h2>
+        <p style="font-size: 1.1rem; color: #555;">
+            Every drop counts! Your blood donation can save mothers in labor, accident victims, and patients with chronic illnesses. Be a hero today.
+        </p>
+        <img src="https://via.placeholder.com/600x300" alt="Donate Blood" style="width: 60%; margin-top: 2rem;">
+    </div>
+</section>
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-info mt-3">
-                    {{ messages[0] }}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        {% if donor_info %}
-            <div class="alert alert-success">
-                Thank you for being a blood donor! Your details have been saved.
-            </div>
-
-            <h4>Update Your Donor Details</h4>
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Weight (kg):</label>
-                    <input type="number" class="form-control" name="weight" value="{{ donor_info.weight }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Blood Group:</label>
-                    <select name="blood_group" class="form-control" required>
-                        {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
-                            <option value="{{ bg }}" {% if donor_info.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Any Disease History:</label>
-                    <textarea class="form-control" name="diseases" rows="3">{{ donor_info.diseases }}</textarea>
-                </div>
-
-                <button type="submit" class="btn btn-warning">Update Details</button>
-            </form>
-        {% else %}
-            <h4>Submit Your Donor Details</h4>
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Weight (kg):</label>
-                    <input type="number" class="form-control" name="weight" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Blood Group:</label>
-                    <select name="blood_group" class="form-control" required>
-                        <option value="">--Select--</option>
-                        <option>A+</option><option>A-</option>
-                        <option>B+</option><option>B-</option>
-                        <option>AB+</option><option>AB-</option>
-                        <option>O+</option><option>O-</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Any Disease History:</label>
-                    <textarea class="form-control" name="diseases" rows="3"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Submit Donor Details</button>
-            </form>
-        {% endif %}
-
-        {% if campaign %}
-            <hr>
-            <div class="card mt-4">
-                <div class="card-header bg-danger text-white">
-                    <strong>Upcoming Blood Donation Campaign</strong>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ campaign.title }}</h5>
-                    <p class="card-text">{{ campaign.description }}</p>
-                    <p><strong>Date:</strong> {{ campaign.date.strftime('%d %B %Y') }}</p>
-                </div>
-            </div>
-        {% endif %}
-
-    {% elif role == 'Receiver' %}
-        <p>You are logged in as a <strong>Receiver</strong>. You can view available blood stock and make requests.</p>
-
-    {% elif role == 'Staff' %}
-        <p>You are logged in as a <strong>Staff</strong>. You can manage donors and handle inventory.</p>
-
-    {% else %}
-        <p>Unknown role. Please contact the admin.</p>
-    {% endif %}
-</div>
+<!-- Dashboard Tile Section -->
+<section style="background-color: #ffe0b2; padding: 4rem 2rem;">
+    <div style="max-width: 1000px; margin: auto; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 2rem;" data-aos="fade-up">
+        <a href="/register" class="tile">
+            <i class="fas fa-user-plus"></i>
+            <h3>Register</h3>
+        </a>
+        <a href="/login" class="tile">
+            <i class="fas fa-sign-in-alt"></i>
+            <h3>Login</h3>
+        </a>
+        <a href="/about" class="tile">
+            <i class="fas fa-info-circle"></i>
+            <h3>About Us</h3>
+        </a>
+    </div>
+</section>
 {% endblock %}

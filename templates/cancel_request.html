@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Are you sure you want to cancel this request?</h2>
+    
+    <div class="alert alert-warning">
+        <strong>Request ID:</strong> {{ request.id }} <br>
+        <strong>Blood Group:</strong> {{ request.blood_group }} <br>
+        <strong>Blood Type:</strong> {{ request.blood_type }} <br>
+        <strong>Quantity:</strong> {{ request.quantity }} <br>
+        <strong>Priority:</strong> {{ request.priority }} <br>
+        <strong>Required By:</strong> {{ request.required_by }} <br>
+        <strong>Address:</strong> {{ request.address }} <br>
+        <strong>Status:</strong> {{ request.status }}
+    </div>
+
+    <form action="{{ url_for('cancel_request', request_id=request.id) }}" method="POST">
+        <button type="submit" class="btn btn-danger btn-lg w-100 mt-3">Confirm Cancellation</button>
+    </form>
+    <form action="{{ url_for('view_requests') }}" method="GET">
+            <button type="submit" class="btn btn-secondary btn-lg w-100 mt-2">Cancel</button>
+    </form>
+
+    <a href="{{ url_for('receiver_dashboard') }}" class="btn btn-secondary btn-lg w-100 mt-2">Go Back</a>
+</div>
+{% endblock %}
+

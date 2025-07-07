@@ -1,10 +1,22 @@
 {% extends "base.html" %}
+
 {% block title %}Receiver Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <h2>Welcome to the Blood Bank Dashboard, {{ session['username'] }}!</h2>
     
+    <!-- Display Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <!-- Blood Request Form -->
     <h4>Submit a Blood Request</h4>
     <form method="POST">
@@ -26,7 +38,15 @@
             <label class="form-label">Quantity Needed (units):</label>
             <input type="number" name="quantity" class="form-control" required min="1">
         </div>
-
+        <div class="mb-3">
+            <label class="form-label">Blood Type:</label>
+            <select name="blood_type" class="form-control" required>
+                <option value="Whole Blood">Whole Blood</option>
+                <option value="Plasma">Plasma</option>
+                <option value="Platelets">Platelets</option>
+            </select>
+        </div>
+        
         <div class="mb-3">
             <label class="form-label">Priority Level:</label>
             <select name="priority" class="form-control" required>

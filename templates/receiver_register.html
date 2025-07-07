@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h2 class="text-center text-danger fw-bold mb-4">Receiver Registration</h2>
+    <form method="POST" action="/receiver-register" class="shadow p-4 rounded bg-light">
+        <!-- Shared fields from users table -->
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" name="confirm_password" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" name="address" required></textarea>
+        </div>
+
+        <!-- Receiver-specific fields -->
+        <div class="mb-3">
+            <label class="form-label">Organization Name</label>
+            <input type="text" class="form-control" name="organization_name" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Type of Organization</label>
+            <select class="form-select" name="type_of_receiver" required>
+                <option value="">-- Select --</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Clinic">Clinic</option>
+                <option value="NGO">NGO</option>
+                <option value="Emergency Organization">Emergency Organization</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contact Number</label>
+            <input type="text" class="form-control" name="contact_number" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">License Number</label>
+            <input type="text" class="form-control" name="license_number" required>
+        </div>
+
+        <button type="submit" class="btn btn-danger w-100">Register</button>
+    </form>
+</div>
+{% endblock %}

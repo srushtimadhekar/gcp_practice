@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Blood Requests</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h2>View Blood Requests</h2>
+{% extends "base.html" %}
 
-        <table class="table">
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">View Blood Requests</h2>
+
+        <table class="table table-bordered table-hover">
             <thead>
                 <tr>
                     <th>Blood Group</th>
@@ -28,23 +22,36 @@
                         <td>{{ request.blood_group }}</td>
                         <td>{{ request.quantity }} units</td>
                         <td>{{ request.priority }}</td>
-                        <td>{{ request.status }}</td>
+                        <td>
+                            {% if request.staff_approval == 'Pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif request.staff_approval == 'Approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif request.staff_approval == 'Rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
                         <td>{{ request.required_by }}</td>
                         <td>{{ request.address }}</td>
                         <td>
-                            <a href="{{ url_for('update_request', request_id=request.id) }}" class="btn btn-warning">Edit</a>
-                            <a href="{{ url_for('cancel_request', request_id=request.id) }}" class="btn btn-danger">Cancel</a>
+                            {% if request.staff_approval == 'Pending' %}
+                                <a href="{{ url_for('approve_request', request_id=request.id) }}" class="btn btn-success btn-sm">Approve</a>
+                                <a href="{{ url_for('reject_request', request_id=request.id) }}" class="btn btn-danger btn-sm">Reject</a>
+                            {% elif request.staff_approval == 'Approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif request.staff_approval == 'Rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
                         </td>
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="7">No requests available.</td>
+                        <td colspan="7" class="text-center">No requests available.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <a href="{{ url_for('home') }}" class="btn btn-primary">Back to Dashboard</a>
+        <a href="{{ url_for('staff_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
     </div>
-</body>
-</html>
+{% endblock %}
