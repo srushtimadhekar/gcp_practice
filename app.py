@@ -1,22 +1,88 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_mysqldb import MySQL
-import re
-from werkzeug.security import check_password_hash, generate_password_hash
-import MySQLdb
+from werkzeug.security import generate_password_hash, check_password_hash
+from uuid import uuid4
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# MySQL configuration
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'c@lient098'
-app.config['MYSQL_DB'] = 'blood_bank_db'
+# ----------------- IN-MEMORY (DUMMY) STORAGE -----------------
+# users: username -> user dict
+# user dict fields: id, username, password (hashed), role, name, email, address
+users = {
+    'donor_demo': {'id': 1, 'username': 'donor_demo', 'password': generate_password_hash('1234'), 'role': 'Donor', 'name': 'Demo Donor', 'email': 'donor@example.com', 'address': 'Demo Address'},
+    'receiver_demo': {'id': 2, 'username': 'receiver_demo', 'password': generate_password_hash('1234'), 'role': 'Receiver', 'name': 'Demo Receiver', 'email': 'receiver@example.com', 'address': 'Demo Address'},
+    'staff_demo': {'id': 3, 'username': 'staff_demo', 'password': generate_password_hash('1234'), 'role': 'Staff', 'name': 'Demo Staff', 'email': 'staff@example.com', 'address': ''}
+}
+_next_user_id = max(u['id'] for u in users.values()) + 1
 
-mysql = MySQL(app)
+# donors details keyed by user_id
+donor_details = {
+    1: {'weight': 60, 'blood_group': 'A+', 'diseases': 'None', 'name': 'Demo Donor'}
+}
 
-# ---------- ROUTES ----------
+# blood requests list (dicts)
+# fields: id, user_id, blood_group, quantity, priority, required_by, address, status, staff_approval
+blood_requests = [
+    {'id': 1, 'user_id': 2, 'blood_group': 'A+', 'quantity': 2, 'priority': 'High', 'required_by': '2025-09-10', 'address': 'Demo Address', 'status': 'Pending', 'staff_approval': 'Pending'}
+]
+_next_request_id = max((r['id'] for r in blood_requests), default=0) + 1
 
+# blood inventory list
+# fields: id, blood_group, available_units, last_updated, expiry_date, product_type, storage_conditions, shelf_life
+blood_inventory = [
+    {'id': 1, 'blood_group': 'A+', 'available_units': 5, 'last_updated': '2025-09-01', 'expiry_date': '2025-10-01', 'product_type': 'PRBC', 'storage_conditions': 'Store at 2-6°C', 'shelf_life': 42}
+]
+_next_inventory_id = max((i['id'] for i in blood_inventory), default=0) + 1
+
+# campaigns list
+campaigns = [
+    {'id': 1, 'title': 'Demo Campaign', 'date': '2025-09-07'}
+]
+
+# ----------------- HELPERS -----------------
+def get_user_by_username(username):
+    return users.get(username)
+
+def get_user_by_id(uid):
+    for u in users.values():
+        if u['id'] == uid:
+            return u
+    return None
+
+def get_user_blood_requests(user_id):
+    return [r for r in blood_requests if r['user_id'] == user_id]
+
+def fetch_blood_inventory():
+    return blood_inventory
+
+def fetch_pending_blood_requests():
+    return [r for r in blood_requests if r['status'] == 'Pending']
+
+def fetch_campaigns():
+    return campaigns
+
+def update_request_status(request_id, status):
+    for r in blood_requests:
+        if r['id'] == request_id:
+            r['status'] = status
+            return True
+    return False
+
+def find_request_by_id(rid):
+    for r in blood_requests:
+        if r['id'] == rid:
+            return r
+    return None
+
+def find_inventory_item_by_id(iid):
+    for i in blood_inventory:
+        if i['id'] == iid:
+            return i
+    return None
+
+# ----------------- ROUTES -----------------
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -38,39 +104,25 @@ def why_donate():
 def login():
     msg = ''
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
-        user = cursor.fetchone()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
 
-        if user:
-            print(f"User data: {user}")  # Debugging user data
-            if check_password_hash(user[2], password):  # password at index 2
-                session['loggedin'] = True
-                session['user_id'] = user[0]  # Changed to 'user_id' for consistency
-                session['username'] = user[1]
-                session['role'] = user[6]  # Corrected role index to 6 (role is at index 6)
+        user = get_user_by_username(username)
+        if user and check_password_hash(user['password'], password):
+            session['loggedin'] = True
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = user['role']
 
-                print(f"Logged in as: {session['role']}")  # Debugging role in session
-
-                if session['role'] == 'Donor':
-                    return redirect(url_for('donor_dashboard'))
-                elif session['role'] == 'Receiver':  # Ensure 'Receiver' role check matches the session value
-                    return redirect(url_for('receiver_dashboard'))
-                elif session['role'] == 'Staff':
-                    return redirect(url_for('staff_dashboard'))
-                else:
-                    flash('Invalid user role.', 'danger')
-                    return redirect(url_for('login'))
-            else:
-                msg = 'Incorrect username/password!'
+            if user['role'] == 'Donor':
+                return redirect(url_for('donor_dashboard'))
+            elif user['role'] == 'Receiver':
+                return redirect(url_for('receiver_dashboard'))
+            elif user['role'] == 'Staff':
+                return redirect(url_for('staff_dashboard'))
         else:
-            msg = 'No user found!'
-    
+            msg = 'Invalid username or password!'
     return render_template('login.html', msg=msg)
-
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -90,161 +142,116 @@ def register():
 
 @app.route('/donor_register', methods=['GET', 'POST'])
 def donor_register():
-    msg = ""  # Initialize the message variable
+    global _next_user_id
     if request.method == 'POST':
-        # Extract form data
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form['email']
-        address = request.form['address']
-        
-        # Donor-specific fields
-        name = request.form['name']
-        dob = request.form['dob']
-        gender = request.form['gender']
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        email = request.form.get('email', '').strip()
+        address = request.form.get('address', '').strip()
+        name = request.form.get('name', '').strip()
+        dob = request.form.get('dob', '').strip()
+        gender = request.form.get('gender', '').strip()
 
-        cursor = mysql.connection.cursor()
-        try:
-            # Check if the username or email already exists
-            cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
-            account = cursor.fetchone()
+        if username in users:
+            flash('Account already exists with this username!', 'danger')
+            return redirect(url_for('donor_register'))
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return redirect(url_for('donor_register'))
+        if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            flash('Invalid email address!', 'danger')
+            return redirect(url_for('donor_register'))
+        # create user
+        user = {
+            'id': _next_user_id,
+            'username': username,
+            'password': generate_password_hash(password),
+            'role': 'Donor',
+            'name': name or username,
+            'email': email,
+            'address': address
+        }
+        users[username] = user
+        donor_details[_next_user_id] = {'weight': '', 'blood_group': '', 'diseases': '', 'name': name}
+        _next_user_id += 1
 
-            if account:
-                msg = 'Account already exists with this username or email!'
-                flash(msg, 'danger')
-            elif password != confirm_password:
-                msg = 'Passwords do not match!'
-                flash(msg, 'danger')
-            elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-                msg = 'Invalid email address!'
-                flash(msg, 'danger')
-            elif not all([username, password, email, address, name, dob, gender]):
-                msg = 'Please fill out all required fields!'
-                flash(msg, 'warning')
-            else:
-                # Hash the password
-                hashed_password = generate_password_hash(password)
+        flash('You have successfully registered as a donor!', 'success')
+        return redirect(url_for('login'))
 
-                # Insert into users table
-                cursor.execute(''' 
-                    INSERT INTO users (username, password, email, address, role) 
-                    VALUES (%s, %s, %s, %s, %s)
-                ''', (username, hashed_password, email, address, 'Donor'))
-                mysql.connection.commit()
-
-                # Get the user_id of the newly created user
-                user_id = cursor.lastrowid
-
-                # Insert into donors table (excluding blood_group, medical_history, and last_donation)
-                cursor.execute(''' 
-                    INSERT INTO donors (user_id, name, dob, gender)
-                    VALUES (%s, %s, %s, %s)
-                ''', (user_id, name, dob, gender))
-                mysql.connection.commit()
-
-                msg = 'You have successfully registered as a donor!'
-                flash(msg, 'success')
-                return redirect(url_for('login'))
-
-        except Exception as e:
-            msg = f"An error occurred: {e}"
-            flash(msg, 'danger')
-
-            app.logger.error(f"Error occurred: {e}")
-        finally:
-            cursor.close()
-
-    return render_template('donor_register.html', msg=msg)
+    return render_template('donor_register.html')
 
 
 @app.route('/receiver-register', methods=['GET', 'POST'])
 def receiver_register():
+    global _next_user_id
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form.get('email')
-        address = request.form.get('address')
-        organization_name = request.form.get('organization_name')
-        type_of_receiver = request.form.get('type_of_receiver')
-        contact_number = request.form.get('contact_number')
-        license_number = request.form.get('license_number')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        email = request.form.get('email', '').strip()
+        address = request.form.get('address', '').strip()
+        organization_name = request.form.get('organization_name', '').strip()
+        type_of_receiver = request.form.get('type_of_receiver', '').strip()
+        contact_number = request.form.get('contact_number', '').strip()
+        license_number = request.form.get('license_number', '').strip()
 
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
-        account = cursor.fetchone()
-
-        if account:
+        if username in users:
             flash('Account already exists!', 'danger')
         elif password != confirm_password:
             flash('Passwords do not match!', 'danger')
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
             flash('Invalid email address!', 'danger')
-        elif not all([username, password, email, address, organization_name, type_of_receiver, contact_number, license_number]):
-            flash('Please fill out all required fields!', 'warning')
         else:
-            # Insert into users table
-            cursor.execute('''INSERT INTO users (username, password, email, address, role)
-                              VALUES (%s, %s, %s, %s, %s)''',
-                           (username, generate_password_hash(password), email, address, 'Receiver'))
-            user_id = cursor.lastrowid
-
-            # Insert into receiver table
-            cursor.execute('''INSERT INTO receiver (user_id, organization_name, type_of_receiver, contact_number, license_number)
-                              VALUES (%s, %s, %s, %s, %s)''',
-                           (user_id, organization_name, type_of_receiver, contact_number, license_number))
-            mysql.connection.commit()
-
+            user = {
+                'id': _next_user_id,
+                'username': username,
+                'password': generate_password_hash(password),
+                'role': 'Receiver',
+                'name': organization_name or username,
+                'email': email,
+                'address': address
+            }
+            users[username] = user
+            _next_user_id += 1
             flash('You have successfully registered as a receiver!', 'success')
             return redirect(url_for('login'))
 
     return render_template('receiver_register.html')
 
-from uuid import uuid4  # at the top of your file
 
 @app.route('/staff-register', methods=['GET', 'POST'])
 def staff_register():
+    global _next_user_id
     if request.method == 'POST':
-        # Shared user fields
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form.get('email')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        email = request.form.get('email', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        contact_number = request.form.get('contact_number', '').strip()
+        shift = request.form.get('shift', '').strip()
 
-        # Staff-specific fields
-        full_name = request.form.get('full_name')
-        contact_number = request.form.get('contact_number')
-        shift = request.form.get('shift')
+        staff_id_gen = "STF" + uuid4().hex[:6].upper()
 
-        # Generate staff ID internally
-        staff_id = "STF" + uuid4().hex[:6].upper()
-
-        cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', (username, email))
-        account = cursor.fetchone()
-
-        if account:
+        if username in users:
             flash('Account already exists!', 'danger')
         elif password != confirm_password:
             flash('Passwords do not match!', 'danger')
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
             flash('Invalid email address!', 'danger')
-        elif not all([username, password, email, full_name, contact_number, shift]):
-            flash('Please fill out all required fields!', 'warning')
         else:
-            # Insert into users table
-            cursor.execute('''INSERT INTO users (username, password, email, address, role)
-                              VALUES (%s, %s, %s, %s, %s)''',
-                           (username, generate_password_hash(password), email, "", 'Staff'))
-            user_id = cursor.lastrowid
-
-            # Insert into staff table
-            cursor.execute('''INSERT INTO staff (user_id, full_name, staff_id, contact_number, shift)
-                              VALUES (%s, %s, %s, %s, %s)''',
-                           (user_id, full_name, staff_id, contact_number, shift))
-            mysql.connection.commit()
-
+            user = {
+                'id': _next_user_id,
+                'username': username,
+                'password': generate_password_hash(password),
+                'role': 'Staff',
+                'name': full_name or username,
+                'email': email,
+                'address': ''
+            }
+            users[username] = user
+            _next_user_id += 1
             flash('You have successfully registered as a staff member!', 'success')
             return redirect(url_for('login'))
 
@@ -257,19 +264,34 @@ def dashboard():
         return redirect(url_for('login'))
 
     user = get_user_by_username(session['username'])
+    if not user:
+        flash('User not found. Please log in again.')
+        return redirect(url_for('login'))
+
     role = user['role']
     user_id = user['id']
 
     if role == 'Receiver':
-        flash(f'Welcome to LifeLine Blood Bank, {user["name"]}!', 'success')
+        flash(f'Welcome to LifeLine Blood Bank, {user.get("name", "")}!', 'success')
         if request.method == 'POST':
             form = request.form
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('''INSERT INTO blood_requests (user_id, blood_group, quantity, priority, required_by, address)
-                              VALUES (%s, %s, %s, %s, %s, %s)''',
-                           (user_id, form['blood_group'], form['quantity'], form['priority'], form['required_by'], form['address']))
-            mysql.connection.commit()
+            # simulate inserting a blood request
+            global _next_request_id
+            new_request = {
+                'id': _next_request_id,
+                'user_id': user_id,
+                'blood_group': form.get('blood_group'),
+                'quantity': int(form.get('quantity', 0)),
+                'priority': form.get('priority'),
+                'required_by': form.get('required_by'),
+                'address': form.get('address'),
+                'status': 'Pending',
+                'staff_approval': 'Pending'
+            }
+            blood_requests.append(new_request)
+            _next_request_id += 1
             flash('Your blood request has been successfully submitted!', 'success')
+
         pending_requests = get_user_blood_requests(user_id)
         return render_template('receiver_dashboard.html', role=role, pending_requests=pending_requests)
 
@@ -278,298 +300,227 @@ def dashboard():
 
     return render_template('dashboard.html', role=role)
 
+
 @app.route('/donor_dashboard', methods=['GET', 'POST'])
 def donor_dashboard():
-    if 'loggedin' not in session:
+    if 'loggedin' not in session or session.get('role') != 'Donor':
         return redirect(url_for('login'))
 
-    # Get user information based on the session username
     username = session['username']
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
-    user = cursor.fetchone()
-
-    if user:
-        role = user['role']
-        user_id = user['id']
-
-        if role == 'Donor':
-            cursor.execute('SELECT * FROM donor_details WHERE user_id = %s', [user_id])
-            donor_info = cursor.fetchone()
-            cursor.execute('SELECT * FROM campaigns ORDER BY date ASC LIMIT 1')
-            campaign = cursor.fetchone()
-
-            if request.method == 'POST':
-                form = request.form
-                if donor_info:
-                    cursor.execute('''UPDATE donor_details SET weight=%s, blood_group=%s, diseases=%s WHERE user_id=%s''',
-                                   (form['weight'], form['blood_group'], form['diseases'], user_id))
-                    flash('Your donor details have been updated successfully!')
-                else:
-                    cursor.execute('''INSERT INTO donor_details (user_id, weight, blood_group, diseases) 
-                                      VALUES (%s, %s, %s, %s)''',
-                                   (user_id, form['weight'], form['blood_group'], form['diseases']))
-                    flash('Thank you for your contribution! You are awesome.')
-                mysql.connection.commit()
-
-            return render_template('donor_dashboard.html', role=role, donor_info=donor_info, campaign=campaign)
-        else:
-            flash('You are not a donor.')
-            return redirect(url_for('dashboard'))
-    else:
+    user = get_user_by_username(username)
+    if not user:
         flash('User not found. Please log in again.')
         return redirect(url_for('login'))
 
+    user_id = user['id']
+    role = user['role']
+
+    donor_info = donor_details.get(user_id, {'weight': '', 'blood_group': '', 'diseases': '', 'name': user.get('name', '')})
+    campaign = campaigns[0] if campaigns else {'title': 'Sample Campaign', 'date': '2025-09-07'}
+
+    if request.method == 'POST':
+        form = request.form
+        donor_details[user_id] = {
+            'weight': form.get('weight', donor_info.get('weight', '')),
+            'blood_group': form.get('blood_group', donor_info.get('blood_group', '')),
+            'diseases': form.get('diseases', donor_info.get('diseases', '')),
+            'name': user.get('name', '')
+        }
+        flash('Your donor details have been updated successfully!')
+
+    return render_template('donor_dashboard.html', role=role, donor_info=donor_info, campaign=campaign)
+
 
 @app.route('/receiver_dashboard', methods=['GET', 'POST'])
-def receiver_dashboard():
-    if 'user_id' not in session or session.get('role', '').lower() != 'receiver':
+def receiver_dashboard_public():
+    # this route name intentionally mirrors earlier usage; session role is enforced
+    if 'loggedin' not in session or session.get('role') != 'Receiver':
         flash('You must be logged in as a Receiver to view this page.', 'danger')
         return redirect(url_for('login'))
 
     user_id = session['user_id']
 
     if request.method == 'POST':
-        blood_group = request.form.get('blood_group')
-        priority = request.form.get('priority')
-        required_by = request.form.get('required_by')
-        address = request.form.get('address')
-
         try:
-            quantity = int(request.form.get('quantity'))
+            quantity = int(request.form.get('quantity', 0))
         except (ValueError, TypeError):
             flash("Invalid quantity value.", "danger")
             return redirect(url_for('receiver_dashboard'))
 
-        cursor = mysql.connection.cursor()
-        cursor.execute("""
-            INSERT INTO blood_requests (user_id, blood_group, quantity, priority, required_by, address, status, staff_approval)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Pending', 'Pending')
-        """, (user_id, blood_group, quantity, priority, required_by, address))
-        mysql.connection.commit()
-        cursor.close()
-
+        global _next_request_id
+        new_request = {
+            'id': _next_request_id,
+            'user_id': user_id,
+            'blood_group': request.form.get('blood_group'),
+            'quantity': quantity,
+            'priority': request.form.get('priority'),
+            'required_by': request.form.get('required_by'),
+            'address': request.form.get('address'),
+            'status': 'Pending',
+            'staff_approval': 'Pending'
+        }
+        blood_requests.append(new_request)
+        _next_request_id += 1
         flash("Blood request submitted successfully.", "success")
         return redirect(url_for('receiver_dashboard'))
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT * FROM blood_requests WHERE user_id = %s AND status = 'Pending'", (user_id,))
-    pending_requests = cursor.fetchall()
-    cursor.close()
-
+    pending_requests = [r for r in blood_requests if r['user_id'] == user_id and r['status'] == 'Pending']
     return render_template('receiver_dashboard.html', pending_requests=pending_requests)
 
 
 @app.route('/cancel_request/<int:request_id>', methods=['GET', 'POST'])
 def cancel_request(request_id):
-    if 'user_id' not in session or session.get('role', '').lower() != 'receiver':
+    if 'user_id' not in session or session.get('role') != 'Receiver':
         flash('Unauthorized access.', 'danger')
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM blood_requests WHERE id = %s AND user_id = %s', (request_id, user_id))
-    request_data = cursor.fetchone()
+    req = find_request_by_id(request_id)
 
-    if request_data:
-        if request_data['status'] == 'Pending':
-            if request.method == 'POST':
-                cursor.execute('DELETE FROM blood_requests WHERE id = %s', (request_id,))
-                mysql.connection.commit()
-                flash('Your blood request has been canceled successfully!', 'success')
-                cursor.close()
-                return redirect(url_for('receiver_dashboard'))
-            cursor.close()
-            return render_template('cancel_request.html', request=request_data)
-        else:
-            flash('Cannot cancel a completed or fulfilled request!', 'warning')
-    else:
+    if not req or req.get('user_id') != user_id:
         flash('Blood request not found or unauthorized access!', 'danger')
+        return redirect(url_for('receiver_dashboard'))
 
-    cursor.close()
-    return redirect(url_for('receiver_dashboard'))
+    if req.get('status') != 'Pending':
+        flash('Cannot cancel a completed or fulfilled request!', 'warning')
+        return redirect(url_for('receiver_dashboard'))
+
+    if request.method == 'POST':
+        # remove request
+        blood_requests.remove(req)
+        flash('Your blood request has been canceled successfully!', 'success')
+        return redirect(url_for('receiver_dashboard'))
+
+    return render_template('cancel_request.html', request=req)
 
 
 @app.route('/update_request/<int:request_id>', methods=['GET', 'POST'])
 def update_request(request_id):
-    if 'user_id' not in session or session.get('role', '').lower() != 'receiver':
+    if 'user_id' not in session or session.get('role') != 'Receiver':
         flash('Unauthorized access.', 'danger')
         return redirect(url_for('login'))
 
     user_id = session['user_id']
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM blood_requests WHERE id = %s AND user_id = %s', (request_id, user_id))
-    db_request = cursor.fetchone()
+    req = find_request_by_id(request_id)
 
-    if db_request:
-        if request.method == 'POST':
-            form = request.form
-            blood_group = form.get('blood_group')
-            priority = form.get('priority')
-            required_by = form.get('required_by')
-            address = form.get('address')
+    if not req or req.get('user_id') != user_id:
+        flash('Blood request not found or unauthorized access!', 'danger')
+        return redirect(url_for('receiver_dashboard'))
 
-            try:
-                quantity = int(form.get('quantity'))
-            except (ValueError, TypeError):
-                flash("Invalid quantity value.", "danger")
-                cursor.close()
-                return render_template('update_request.html', request=db_request)
+    if request.method == 'POST':
+        try:
+            quantity = int(request.form.get('quantity', req.get('quantity', 0)))
+        except (ValueError, TypeError):
+            flash("Invalid quantity value.", "danger")
+            return render_template('update_request.html', request=req)
 
-            cursor.execute('''
-                UPDATE blood_requests
-                SET blood_group=%s, quantity=%s, priority=%s, required_by=%s, address=%s
-                WHERE id=%s
-            ''', (
-                blood_group,
-                quantity,
-                priority,
-                required_by,
-                address,
-                request_id
-            ))
-            mysql.connection.commit()
-            cursor.close()
-            flash('Your blood request has been updated successfully!', 'success')
-            return redirect(url_for('receiver_dashboard'))
+        req['blood_group'] = request.form.get('blood_group', req.get('blood_group'))
+        req['quantity'] = quantity
+        req['priority'] = request.form.get('priority', req.get('priority'))
+        req['required_by'] = request.form.get('required_by', req.get('required_by'))
+        req['address'] = request.form.get('address', req.get('address'))
+        flash('Your blood request has been updated successfully!', 'success')
+        return redirect(url_for('receiver_dashboard'))
 
-        cursor.close()
-        return render_template('update_request.html', request=db_request)
-
-    flash('Blood request not found or unauthorized access!', 'danger')
-    cursor.close()
-    return redirect(url_for('receiver_dashboard'))
+    return render_template('update_request.html', request=req)
 
 
 @app.route('/staff_dashboard')
 def staff_dashboard():
-    if not session.get('loggedin') or session['role'] != 'Staff':
+    if 'loggedin' not in session or session.get('role') != 'Staff':
         return redirect(url_for('login'))
-    
-    # Fetch blood inventory, pending requests, and campaigns as needed
+
     inventory = fetch_blood_inventory()
     pending_requests = fetch_pending_blood_requests()
-    campaigns = fetch_campaigns()
+    cps = fetch_campaigns()
+    return render_template('staff_dashboard.html', blood_inventory=inventory, pending_requests=pending_requests, campaigns=cps)
 
-    return render_template('staff_dashboard.html', 
-                           blood_inventory=inventory,
-                           pending_requests=pending_requests,
-                           campaigns=campaigns)
 
 @app.route('/view_requests')
 def view_requests():
     if 'loggedin' not in session:
         return redirect(url_for('login'))
-    
-    # Fetch all blood requests from the database
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM blood_requests ORDER BY required_by ASC')
-    requests = cursor.fetchall()
-    
-    return render_template('view_requests.html', requests=requests)
+    return render_template('view_requests.html', requests=blood_requests)
+
 
 @app.route('/approve_request/<int:request_id>')
 def approve_request(request_id):
     if session.get('role') != 'Staff':
         return redirect(url_for('login'))
-    
-    # Update request status to 'Approved'
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('UPDATE blood_requests SET staff_approval = "Approved" WHERE id = %s', (request_id,))
-    mysql.connection.commit()
-    
+
+    req = find_request_by_id(request_id)
+    if not req:
+        flash('Request not found.', 'danger')
+        return redirect(url_for('view_requests'))
+
+    req['staff_approval'] = 'Approved'
+    req['status'] = 'Approved'
     flash("Request Approved Successfully!", "success")
     return redirect(url_for('view_requests'))
+
 
 @app.route('/reject_request/<int:request_id>')
 def reject_request(request_id):
     if session.get('role') != 'Staff':
         return redirect(url_for('login'))
-    
-    # Update request status to 'Rejected'
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('UPDATE blood_requests SET staff_approval = "Rejected" WHERE id = %s', (request_id,))
-    mysql.connection.commit()
-    
+
+    req = find_request_by_id(request_id)
+    if not req:
+        flash('Request not found.', 'danger')
+        return redirect(url_for('view_requests'))
+
+    req['staff_approval'] = 'Rejected'
+    req['status'] = 'Rejected'
     flash("Request Rejected Successfully!", "danger")
     return redirect(url_for('view_requests'))
+
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ---------- HELPERS ----------
 
-def fetch_blood_inventory():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM blood_inventory')
-    inventory = cursor.fetchall()
-    return inventory
+@app.route('/view_campaigns')
+def view_campaigns():
+    return render_template('view_campaigns.html', campaigns=campaigns)
 
-def fetch_pending_blood_requests():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM blood_requests WHERE status = "Pending"')
-    return cursor.fetchall()
 
-def fetch_campaigns():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM campaigns')
-    campaigns = cursor.fetchall()
-    return campaigns
-
-def update_request_status(request_id, status):
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('UPDATE blood_requests SET status = %s WHERE id = %s', (status, request_id))
-    mysql.connection.commit()
-
-from datetime import datetime
-
-from flask import Flask, render_template, request, redirect, url_for, flash
-from datetime import datetime, timedelta
-import MySQLdb.cursors
-
+# ----------------- Inventory routes -----------------
 @app.route('/blood_inventory', methods=['GET', 'POST'])
-def blood_inventory():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+def blood_inventory_view():
+    # Filter inventory by optional form values
+    blood_group = request.form.get('blood_group', '') if request.method == 'POST' else request.args.get('blood_group', '')
+    amount = request.form.get('amount', '') if request.method == 'POST' else request.args.get('amount', '')
 
-    blood_group = request.form.get('blood_group', '')
-    amount = request.form.get('amount', '')
-
-    query = 'SELECT * FROM blood_inventory WHERE 1=1'
-    params = []
-
+    results = blood_inventory
     if blood_group:
-        query += ' AND blood_group = %s'
-        params.append(blood_group)
-
+        results = [i for i in results if i.get('blood_group') == blood_group]
     if amount:
-        query += ' AND available_units >= %s'
-        params.append(amount)
+        try:
+            amt = int(amount)
+            results = [i for i in results if int(i.get('available_units', 0)) >= amt]
+        except:
+            pass
 
-    cursor.execute(query, params)
-    inventory = cursor.fetchall()
-
-    # For expiry row highlighting
+    # For expiry highlighting in templates
     current_date = datetime.today().date()
+    # build a list of distinct blood groups
+    blood_groups = sorted(list({i['blood_group'] for i in blood_inventory}))
 
-    cursor.execute('SELECT DISTINCT blood_group FROM blood_inventory')
-    blood_groups = cursor.fetchall()
-
-    return render_template('blood_inventory.html',
-                           inventory=inventory,
-                           blood_groups=blood_groups,
-                           current_date=current_date)
+    return render_template('blood_inventory.html', inventory=results, blood_groups=blood_groups, current_date=current_date)
 
 
 @app.route('/add_inventory', methods=['POST'])
 def add_inventory():
-    cursor = mysql.connection.cursor()
-
-    blood_group = request.form['blood_group']
-    available_units = int(request.form['amount'])
-    collection_date = request.form['collection_date']
-    product_type = request.form['product_type']
+    global _next_inventory_id
+    blood_group = request.form.get('blood_group')
+    try:
+        available_units = int(request.form.get('amount', 0))
+    except:
+        available_units = 0
+    collection_date = request.form.get('collection_date')
+    product_type = request.form.get('product_type')
 
     # Determine shelf life and storage conditions based on product type
     if product_type == 'PRBC':
@@ -580,33 +531,31 @@ def add_inventory():
         storage_condition = 'Store at room temperature'
     elif product_type == 'FFP':
         shelf_life = 365
-        storage_condition = 'Store at -18°C or colder'    
-    elif product_type not in ['PRBC', 'Platelets', 'FFP']:
+        storage_condition = 'Store at -18°C or colder'
+    else:
         flash('Invalid product type selected.', 'danger')
-    return redirect(url_for('blood_inventory'))
+        return redirect(url_for('blood_inventory'))
 
-    # Calculate expiry date
-    collection_date_obj = datetime.strptime(collection_date, "%Y-%m-%d")
-    expiry_date = collection_date_obj + timedelta(days=shelf_life)
+    # parse collection date and compute expiry
+    try:
+        collection_date_obj = datetime.strptime(collection_date, "%Y-%m-%d")
+    except:
+        collection_date_obj = datetime.today()
+    expiry_date = (collection_date_obj + timedelta(days=shelf_life)).strftime("%Y-%m-%d")
+    last_updated = datetime.today().strftime("%Y-%m-%d")
 
-    query = """
-        INSERT INTO blood_inventory (
-            blood_group, available_units, last_updated, expiry_date,
-            product_type, storage_conditions, shelf_life
-        )
-        VALUES (%s, %s, NOW(), %s, %s, %s, %s)
-    """
-    values = (
-        blood_group,
-        available_units,
-        expiry_date.strftime("%Y-%m-%d"),
-        product_type,
-        storage_condition,
-        shelf_life
-    )
-
-    cursor.execute(query, values)
-    mysql.connection.commit()
+    item = {
+        'id': _next_inventory_id,
+        'blood_group': blood_group,
+        'available_units': available_units,
+        'last_updated': last_updated,
+        'expiry_date': expiry_date,
+        'product_type': product_type,
+        'storage_conditions': storage_condition,
+        'shelf_life': shelf_life
+    }
+    blood_inventory.append(item)
+    _next_inventory_id += 1
 
     flash('Blood inventory added successfully!', 'success')
     return redirect(url_for('blood_inventory'))
@@ -614,83 +563,49 @@ def add_inventory():
 
 @app.route('/edit_inventory/<int:id>', methods=['GET', 'POST'])
 def edit_inventory(id):
-    # Create cursor to interact with the database
-    cur = mysql.connection.cursor()
+    item = find_inventory_item_by_id(id)
+    if not item:
+        flash("Inventory item not found!", "danger")
+        return redirect(url_for('blood_inventory'))
 
-    # Handle GET request (fetch current data)
     if request.method == 'GET':
-        # Fetch inventory data for the given id
-        cur.execute("SELECT * FROM blood_inventory WHERE id = %s", [id])
-        item = cur.fetchone()
-
-        # If no item found, return 404
-        if not item:
-            flash("Inventory item not found!", "danger")
-            return redirect(url_for('blood_inventory'))
-
-        # Render the edit page with the item data
         return render_template('edit_inventory.html', item=item)
 
-    # Handle POST request (update data)
-    if request.method == 'POST':
-        # Get the new available_units value from the form
-        available_units = request.form['amount']
-        
-        # Update the inventory item in the database
-        try:
-            # Update the record for the given id
-            cur.execute("""
-                UPDATE blood_inventory
-                SET available_units = %s, last_updated = NOW()
-                WHERE id = %s
-            """, [available_units, id])
-
-            # Commit the changes to the database
-            mysql.connection.commit()
-
-            # Show success message
-            flash("Inventory updated successfully!", "success")
-        except Exception as e:
-            # If an error occurs, show error message
-            flash(f"An error occurred while updating the inventory: {e}", "danger")
-        finally:
-            # Close the cursor
-            cur.close()
-
-        # Redirect to the blood inventory list page
-        return redirect(url_for('blood_inventory'))
+    # POST update
+    try:
+        available_units = int(request.form.get('amount', item.get('available_units', 0)))
+    except:
+        available_units = item.get('available_units', 0)
+    item['available_units'] = available_units
+    item['last_updated'] = datetime.today().strftime("%Y-%m-%d")
+    flash("Inventory updated successfully!", "success")
+    return redirect(url_for('blood_inventory'))
 
 
 @app.route('/delete_inventory/<int:id>', methods=['POST'])
 def delete_inventory(id):
     if session.get('role') != 'Staff':
-        flash("Unauthorized access!", "danger")
+        flash("Unauthorized access!", 'danger')
         return redirect(url_for('login'))
 
-    cursor = mysql.connection.cursor()
-    try:
-        # Execute deletion
-        cursor.execute("DELETE FROM blood_inventory WHERE id = %s", (id,))
-        mysql.connection.commit()
-        flash("Inventory item deleted successfully!", "success")
-    except Exception as e:
-        flash(f"Error deleting inventory item: {str(e)}", "danger")
-    finally:
-        cursor.close()
+    item = find_inventory_item_by_id(id)
+    if not item:
+        flash("Inventory item not found!", "danger")
+        return redirect(url_for('blood_inventory'))
 
+    blood_inventory.remove(item)
+    flash("Inventory item deleted successfully!", "success")
     return redirect(url_for('blood_inventory'))
 
 
-
-@app.route('/view_campaigns')
-def view_campaigns():
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM campaigns ORDER BY date ASC")
-    campaigns = cursor.fetchall()
-    cursor.close()
-    return render_template('view_campaigns.html', campaigns=campaigns)
+# ----------------- Misc helpers used earlier (kept safe) -----------------
+@app.route('/view_requests_public')
+def view_requests_public():
+    return render_template('view_requests.html', requests=blood_requests)
 
 
-# ---------- ENTRY POINT ----------
+# ----------------- ENTRY POINT -----------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    # Bind to 0.0.0.0 for Cloud Run
+    app.run(host="0.0.0.0", port=port, debug=True)
