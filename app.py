@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from uuid import uuid4
 from datetime import datetime, timedelta
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 app.secret_key = 'your_secret_key'
 
 # ----------------- IN-MEMORY (DUMMY) STORAGE -----------------
